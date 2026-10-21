@@ -1,10 +1,12 @@
 {
-  "name": "roadassist-fullstack",
+  "name": "roadassist-monolith",
   "version": "1.0.0",
-  "description": "RoadAssist Platform",
+  "description": "RoadAssist Fullstack",
   "scripts": {
+    "install-frontend": "cd frontend && npm install",
     "install-backend": "cd backend && npm install",
+    "build-frontend": "cd frontend && npm run build",
     "start": "cd backend && node server.js",
-    "build": "npm run install-backend"
+    "build": "npm run install-frontend && npm run install-backend && npm run build-frontend"
   }
 }
