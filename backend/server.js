@@ -16,20 +16,21 @@ const PORT = process.env.PORT || 5000
 // Connect DB then start server
 connectDB().then(() => {
   // ✅ SERVE FRONTEND IN PRODUCTION
-  // If we are on Render (NODE_ENV=production), serve the built React files
   if (process.env.NODE_ENV === 'production') {
     // Point to the 'dist' folder inside the frontend directory
     const frontendPath = path.join(__dirname, '../frontend/dist')
 
-    // Serve static files (JS, CSS, images)
+    // Serve static files (JS, CSS, images, etc.)
     app.use(express.static(frontendPath))
 
-    // Catch-all route: If a user visits any URL that is NOT an API route,
-    // send them the React index.html file (this makes React Router work)
-    app.get('*', (req, res) => {
-      // Don't intercept API routes
+    // ✅ Catch-all route using RegExp (Fixes Express v5 crash)
+    // Any route that is NOT an API route gets sent the React index.html
+    app.get(/.*/, (req, res) => {
       if (!req.originalUrl.startsWith('/api')) {
         res.sendFile(path.resolve(frontendPath, 'index.html'))
+      } else {
+        // If an API route isn't found, pass it to the 404 handler
+        res.status(404).json({ message: 'API route not found' })
       }
     })
   }
