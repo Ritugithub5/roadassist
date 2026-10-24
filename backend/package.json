@@ -1,23 +1,13 @@
 {
   "name": "roadassist-backend",
   "version": "1.0.0",
-  "description": "RoadAssist API - Roadside assistance platform backend",
   "main": "server.js",
   "type": "module",
   "scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server.js",
-  "build": "cd ../frontend && npm install && npm run build"
-},
-  "keywords": [
-    "express",
-    "mongodb",
-    "jwt",
-    "roadside-assistance",
-    "mern"
-  ],
-  "author": "Subhashree Behera",
-  "license": "MIT",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "cd ../frontend && npm install --include=dev && npm run build"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
