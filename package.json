@@ -1,8 +1,8 @@
 {
-  "name": "roadassist-monorepo",
+  "name": "roadassist",
   "version": "1.0.0",
   "scripts": {
-    "build": "npm install --prefix frontend && npm install --prefix backend && npm run build --prefix frontend",
+    "build": "npm install --prefix frontend --include=dev && npm install --prefix backend && npm run build --prefix frontend",
     "start": "node backend/server.js"
   }
 }

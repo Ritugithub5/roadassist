@@ -14,24 +14,27 @@ const PORT = process.env.PORT || 5000
 
 connectDB().then(() => {
   if (process.env.NODE_ENV === 'production') {
-    // Point to the built React app
+    // ✅ Go up one folder from 'backend' to find 'frontend'
     const frontendPath = path.join(__dirname, '../frontend/dist')
 
-    // Serve static files
+    // Serve static files (JS, CSS, images)
     app.use(express.static(frontendPath))
 
-    // Catch-all route (RegExp for Express 5)
+    // ✅ Catch-all for React Router (Express v5 safe)
     app.get(/.*/, (req, res) => {
-      if (!req.originalUrl.startsWith('/api')) {
-        res.sendFile(path.resolve(frontendPath, 'index.html'))
-      } else {
-        res.status(404).json({ message: 'API route not found' })
+      // If it's an API route, let it pass to the API handler
+      if (req.originalUrl.startsWith('/api')) {
+        return res.status(404).json({ message: 'API route not found' })
       }
+      
+      // Otherwise, send the React index.html
+      res.sendFile(path.resolve(frontendPath, 'index.html'))
     })
   }
 
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`)
     console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`)
+    console.log(`🌍 Serving frontend from: ${path.join(__dirname, '../frontend/dist')}`)
   })
 })
