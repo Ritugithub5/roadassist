@@ -70,7 +70,7 @@ const Navbar = () => {
       section: 'Company',
       items: [
         { name: 'About Us', path: '/about', icon: <FaInfoCircle />, desc: 'Our story & mission' },
-        { name: 'Contact Us', path: '/help#contact', icon: <FaEnvelope />, desc: 'Get in touch with us' },
+        { name: 'Contact Us', path: '/contact', icon: <FaEnvelope />, desc: 'Get in touch with us' },
       ],
     },
   ]
