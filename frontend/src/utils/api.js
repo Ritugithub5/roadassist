@@ -1,8 +1,15 @@
 import axios from 'axios'
 
 // ============ BASE URLS ============
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-const SERVER_BASE = API_BASE.replace('/api', '')
+// In production (Render), we use the relative path '/api' because the frontend and backend are on the same URL.
+// In development (localhost), we use the environment variable or default to localhost:5000.
+const API_BASE = import.meta.env.PROD 
+  ? '/api' 
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
+
+const SERVER_BASE = import.meta.env.PROD 
+  ? '' 
+  : API_BASE.replace('/api', '')
 
 // ============ AXIOS INSTANCE ============
 const API = axios.create({
@@ -42,7 +49,7 @@ export const getImageUrl = (path) => {
   // 1. If it's already an external URL, return it
   if (path.startsWith('http')) return path
   
-  // 2. In production (Render), both are on the same domain, just return the path
+  // 2. In production, both are on the same domain, just return the path
   if (import.meta.env.PROD) {
     return path
   }
