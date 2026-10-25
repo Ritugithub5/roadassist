@@ -7,6 +7,7 @@ const contactSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     subject: { type: String, required: true },
     message: { type: String, required: true },
+    address: { type: String, required: true }, // ✅ New field
   },
   { timestamps: true }
 )
