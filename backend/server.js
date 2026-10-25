@@ -18,9 +18,9 @@ connectDB().then(() => {
     const frontendPath = path.join(__dirname, '../frontend/dist')
     app.use(express.static(frontendPath))
 
-    // 2. Serve images from the frontend folder
+    // 2. Serve your images from frontend/src/image under the /image route
     const imagePath = path.join(__dirname, '../frontend/src/image')
-    app.use('/uploads', express.static(imagePath))
+    app.use('/image', express.static(imagePath))
 
     // 3. Catch-all for React Router
     app.get(/.*/, (req, res) => {

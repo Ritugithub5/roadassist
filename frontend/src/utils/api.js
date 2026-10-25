@@ -36,19 +36,18 @@ API.interceptors.response.use(
 )
 
 // ============ IMAGE URL HELPER ============
-/**
- * Convert a backend image path to a full URL.
- * - If path is empty → returns ''
- * - If path is already a full URL (starts with http) → returns as-is
- * - Otherwise prepends SERVER_BASE (e.g. http://localhost:5000)
- *
- * Example:
- *   getImageUrl('/uploads/car_tool.png')
- *   → 'http://localhost:5000/uploads/car_tool.png'
- */
 export const getImageUrl = (path) => {
   if (!path) return ''
+  
+  // 1. If it's already an external URL, return it
   if (path.startsWith('http')) return path
+  
+  // 2. In production (Render), both are on the same domain, just return the path
+  if (import.meta.env.PROD) {
+    return path
+  }
+  
+  // 3. In development (localhost), point to the local backend
   return `${SERVER_BASE}${path.startsWith('/') ? '' : '/'}${path}`
 }
 

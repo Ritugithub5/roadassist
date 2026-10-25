@@ -49,7 +49,6 @@ const seedAll = async () => {
     await Product.deleteMany({ seller: seller._id })
 
     // ✅ Images served from frontend/src/image/ folder
-    // Backend serves this folder at /uploads (see app.js)
     const products = [
       {
         seller: seller._id,
@@ -59,7 +58,7 @@ const seedAll = async () => {
         price: 2299,
         mrp: 3299,
         stock: 15,
-        image: '/uploads/car_tool.png',
+        image: '/image/car_tool.png',
         emoji: '🧰',
         badge: 'Pro Pick',
         rating: 4.6,
@@ -74,7 +73,7 @@ const seedAll = async () => {
         price: 449,
         mrp: 699,
         stock: 30,
-        image: '/uploads/car_air.png',
+        image: '/image/car_air.png',
         emoji: '📏',
         badge: null,
         rating: 4.3,
@@ -89,7 +88,7 @@ const seedAll = async () => {
         price: 1899,
         mrp: 2499,
         stock: 18,
-        image: '/uploads/car_emr.png',
+        image: '/image/car_emr.png',
         emoji: '🚨',
         badge: 'Bestseller',
         rating: 4.8,
@@ -104,7 +103,7 @@ const seedAll = async () => {
         price: 3499,
         mrp: 4999,
         stock: 8,
-        image: '/uploads/car_jump.png',
+        image: '/image/car_jump.png',
         emoji: '🔋',
         badge: 'Top Rated',
         rating: 4.7,
@@ -119,7 +118,7 @@ const seedAll = async () => {
         price: 599,
         mrp: 899,
         stock: 45,
-        image: '/uploads/car_wash.png',
+        image: '/image/car_wash.png',
         emoji: '🧽',
         badge: 'Bestseller',
         rating: 4.7,
@@ -134,7 +133,7 @@ const seedAll = async () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('✅ All data seeded successfully!')
     console.log('📁 Images served from: frontend/src/image/')
-    console.log('🔗 Image URL: http://localhost:5000/uploads/car_tool.png')
+    console.log('🔗 Image URL: http://localhost:5000/image/car_tool.png')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     process.exit(0)
   } catch (err) {
