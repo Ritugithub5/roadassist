@@ -57,11 +57,10 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
 
-// Serve frontend's image folder as /uploads
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, '../../frontend/src/image'))
-)
+// app.use(
+//   '/uploads',
+//   express.static(path.join(__dirname, '../../frontend/src/image'))
+// )
 
 // Health check
 app.get('/api/health', (req, res) => {
