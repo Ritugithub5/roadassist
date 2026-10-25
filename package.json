@@ -2,7 +2,7 @@
   "name": "roadassist",
   "version": "1.0.0",
   "scripts": {
-    "build": "npm install --prefix frontend --include=dev && npm install --prefix backend && npm run build --prefix frontend",
+    "build": "cd frontend && npm install --include=dev && npm run build",
     "start": "node backend/server.js"
   }
 }
