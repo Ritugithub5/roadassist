@@ -13,6 +13,7 @@ import Store from "./pages/Store";
 import Insurance from "./pages/Insurance";
 import Mechanics from "./pages/Mechanics";
 import About from "./pages/About";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 // Partner pages
@@ -63,7 +64,7 @@ function App() {
           <Route path="/insurance" element={<Insurance />} />
           <Route path="/mechanics" element={<Mechanics />} />
           <Route path="/about" element={<About />} />
-
+          <Route path="/contact" element={<Contact />} />
           {/* ============ PARTNER ============ */}
           <Route path="/partner/register" element={<PartnerRegister />} />
           <Route path="/partner/login" element={<PartnerLogin />} />

@@ -19,7 +19,7 @@ import brandRoutes from './routes/brandRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
 import disputeRoutes from './routes/disputeRoutes.js'
 import sellerRoutes from './routes/sellerRoutes.js'
-
+import contactRoutes from './routes/contactRoutes.js'
 import { notFound, errorHandler } from './middleware/errorMiddleware.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -85,6 +85,7 @@ app.use('/api/brands', brandRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/disputes', disputeRoutes)
 app.use('/api/sellers', sellerRoutes)
+app.use('/api/contact', contactRoutes)
 
 // Error handlers
 // app.use(notFound)

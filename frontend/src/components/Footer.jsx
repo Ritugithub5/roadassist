@@ -31,7 +31,7 @@ const Footer = () => {
     ],
     Support: [
       { name: 'Help Center', path: '/help' },
-      { name: 'Contact Us', path: '/help#contact' },
+      { name: 'Contact Us', path: '/contact' },
     ],
   }
 
