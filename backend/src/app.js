@@ -87,7 +87,7 @@ app.use('/api/disputes', disputeRoutes)
 app.use('/api/sellers', sellerRoutes)
 
 // Error handlers
-app.use(notFound)
+// app.use(notFound)
 app.use(errorHandler)
 
 export default app 

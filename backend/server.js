@@ -18,11 +18,11 @@ connectDB().then(() => {
     const frontendPath = path.join(__dirname, '../frontend/dist')
     app.use(express.static(frontendPath))
 
-    // 2. Serve your images DIRECTLY from frontend/src/image
+    // 2. Serve images from the frontend folder
     const imagePath = path.join(__dirname, '../frontend/src/image')
     app.use('/uploads', express.static(imagePath))
 
-    // 3. Catch-all for React Router (Express 5 safe)
+    // 3. Catch-all for React Router
     app.get(/.*/, (req, res) => {
       if (!req.originalUrl.startsWith('/api')) {
         res.sendFile(path.resolve(frontendPath, 'index.html'))
