@@ -8,7 +8,7 @@ import { successResponse, errorResponse } from '../utils/apiResponse.js'
 // @route   POST /api/services
 export const createRequest = async (req, res, next) => {
   try {
-    // ✅ FIX: Explicitly set mechanic to null if no preferredMechanic is passed
+    // ✅ CRITICAL FIX: Explicitly set mechanic to null if no preferredMechanic
     const data = {
       ...req.body,
       user: req.user._id,
