@@ -8,8 +8,7 @@ import { successResponse, errorResponse } from '../utils/apiResponse.js'
 // @route   POST /api/services
 export const createRequest = async (req, res, next) => {
   try {
-    // ✅ FIX: Always set status to 'Requested' (Pending). 
-    // Do NOT auto-accept. Wait for the mechanic to click "Accept".
+    // ✅ Force status to 'Requested' (Pending). Do NOT auto-accept.
     const data = {
       ...req.body,
       user: req.user._id,
@@ -17,12 +16,11 @@ export const createRequest = async (req, res, next) => {
         req.body.preferredMechanic && req.body.preferredMechanic !== 'auto'
           ? req.body.preferredMechanic
           : null,
-      status: 'Requested', // 👈 Forces the job to be Pending
+      status: 'Requested', 
     }
 
     const service = await ServiceRequest.create(data)
 
-    // 🔔 Notify the driver
     await createNotification({
       userId: req.user._id,
       title: '🚗 Request created',
@@ -31,7 +29,6 @@ export const createRequest = async (req, res, next) => {
       link: `/track/${service._id}`,
     })
 
-    // 🔔 Notify the mechanic
     if (data.mechanic) {
       await createNotification({
         userId: data.mechanic,
@@ -215,7 +212,6 @@ export const getMechanicJobs = async (req, res, next) => {
     let filter = {}
 
     if (tab === 'new') {
-      // ✅ FIX: Shows jobs that are unassigned OR specifically assigned to this mechanic (but still Requested)
       filter = {
         status: 'Requested',
         $or: [
