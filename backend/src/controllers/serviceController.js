@@ -8,31 +8,35 @@ import { successResponse, errorResponse } from '../utils/apiResponse.js'
 // @route   POST /api/services
 export const createRequest = async (req, res, next) => {
   try {
-    const data = { ...req.body, user: req.user._id }
-
-    // Auto-assign if driver picked a specific mechanic
-    if (req.body.preferredMechanic && req.body.preferredMechanic !== 'auto') {
-      data.mechanic = req.body.preferredMechanic
-      data.status = 'Accepted'
+    // ✅ FIX: Always set status to 'Requested' (Pending). 
+    // Do NOT auto-accept. Wait for the mechanic to click "Accept".
+    const data = {
+      ...req.body,
+      user: req.user._id,
+      mechanic:
+        req.body.preferredMechanic && req.body.preferredMechanic !== 'auto'
+          ? req.body.preferredMechanic
+          : null,
+      status: 'Requested', // 👈 Forces the job to be Pending
     }
 
     const service = await ServiceRequest.create(data)
 
-    // 🔔 Notify the driver (confirmation)
+    // 🔔 Notify the driver
     await createNotification({
       userId: req.user._id,
       title: '🚗 Request created',
-      message: `Your ${service.serviceType} request is now live. Finding mechanics nearby...`,
+      message: `Your ${service.serviceType} request is now live.`,
       type: 'job',
       link: `/track/${service._id}`,
     })
 
-    // 🔔 Notify the mechanic (if driver picked one)
+    // 🔔 Notify the mechanic
     if (data.mechanic) {
       await createNotification({
         userId: data.mechanic,
         title: '🔧 New job assigned',
-        message: `You've been assigned a ${service.serviceType} request`,
+        message: `You have a new ${service.serviceType} request. Please accept it.`,
         type: 'job',
         link: '/mechanic',
       })
@@ -89,7 +93,6 @@ export const updateStatus = async (req, res, next) => {
 
     if (!request) return errorResponse(res, 404, 'Request not found')
 
-    // 🔔 Notify driver about status change
     const statusMessages = {
       'En Route': '🚗 Your mechanic is on the way!',
       Arrived: '📍 Your mechanic has arrived at your location.',
@@ -131,7 +134,6 @@ export const submitFeedback = async (req, res, next) => {
 
     if (!request) return errorResponse(res, 404, 'Request not found')
 
-    // Recalculate mechanic's average rating
     if (request.mechanic) {
       const allRated = await ServiceRequest.find({
         mechanic: request.mechanic,
@@ -154,7 +156,6 @@ export const submitFeedback = async (req, res, next) => {
         }
       )
 
-      // 🔔 Notify mechanic
       await createNotification({
         userId: request.mechanic,
         title: `⭐ New ${rating}-star rating`,
@@ -179,9 +180,6 @@ export const acceptRequest = async (req, res, next) => {
     const request = await ServiceRequest.findById(req.params.id)
     if (!request) return errorResponse(res, 404, 'Request not found')
 
-    if (request.mechanic) {
-      return errorResponse(res, 400, 'Already taken by another mechanic')
-    }
     if (request.status !== 'Requested') {
       return errorResponse(res, 400, `Cannot accept a ${request.status} request`)
     }
@@ -195,7 +193,6 @@ export const acceptRequest = async (req, res, next) => {
       .populate('vehicle', 'name plate')
       .populate('mechanic', 'name phone')
 
-    // 🔔 Notify driver
     await createNotification({
       userId: request.user,
       title: '🔧 Mechanic accepted your request',
@@ -218,7 +215,15 @@ export const getMechanicJobs = async (req, res, next) => {
     let filter = {}
 
     if (tab === 'new') {
-      filter = { status: 'Requested', mechanic: { $exists: false } }
+      // ✅ FIX: Shows jobs that are unassigned OR specifically assigned to this mechanic (but still Requested)
+      filter = {
+        status: 'Requested',
+        $or: [
+          { mechanic: null },
+          { mechanic: { $exists: false } },
+          { mechanic: req.user._id },
+        ],
+      }
     } else if (tab === 'progress') {
       filter = {
         mechanic: req.user._id,
@@ -229,7 +234,8 @@ export const getMechanicJobs = async (req, res, next) => {
     } else {
       filter = {
         $or: [
-          { status: 'Requested', mechanic: { $exists: false } },
+          { status: 'Requested', mechanic: null },
+          { status: 'Requested', mechanic: req.user._id },
           { mechanic: req.user._id },
         ],
       }
@@ -264,7 +270,6 @@ export const cancelRequest = async (req, res, next) => {
     request.status = 'Cancelled'
     await request.save()
 
-    // 🔔 Notify mechanic if assigned
     if (request.mechanic) {
       await createNotification({
         userId: request.mechanic,
