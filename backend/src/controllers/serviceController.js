@@ -8,7 +8,8 @@ import { successResponse, errorResponse } from '../utils/apiResponse.js'
 // @route   POST /api/services
 export const createRequest = async (req, res, next) => {
   try {
-    // ✅ CRITICAL FIX: Explicitly set mechanic to null if no preferredMechanic
+    // ✅ FIX: Always set status to 'Requested'. Do not auto-accept.
+    // If the driver picked a mechanic, we save that ID, but the mechanic still has to accept it.
     const data = {
       ...req.body,
       user: req.user._id,
@@ -16,11 +17,7 @@ export const createRequest = async (req, res, next) => {
         req.body.preferredMechanic && req.body.preferredMechanic !== 'auto'
           ? req.body.preferredMechanic
           : null,
-    }
-
-    // Auto-assign if driver picked a specific mechanic
-    if (data.mechanic) {
-      data.status = 'Accepted'
+      status: 'Requested', // Force status to Requested
     }
 
     const service = await ServiceRequest.create(data)
@@ -39,7 +36,7 @@ export const createRequest = async (req, res, next) => {
       await createNotification({
         userId: data.mechanic,
         title: '🔧 New job assigned',
-        message: `You've been assigned a ${service.serviceType} request`,
+        message: `You have a new ${service.serviceType} request. Please accept it.`,
         type: 'job',
         link: '/mechanic',
       })
@@ -186,13 +183,11 @@ export const acceptRequest = async (req, res, next) => {
     const request = await ServiceRequest.findById(req.params.id)
     if (!request) return errorResponse(res, 404, 'Request not found')
 
-    if (request.mechanic) {
-      return errorResponse(res, 400, 'Already taken by another mechanic')
-    }
     if (request.status !== 'Requested') {
       return errorResponse(res, 400, `Cannot accept a ${request.status} request`)
     }
 
+    // Assign the mechanic and update status
     request.mechanic = req.user._id
     request.status = 'Accepted'
     await request.save()
@@ -225,10 +220,14 @@ export const getMechanicJobs = async (req, res, next) => {
     let filter = {}
 
     if (tab === 'new') {
-      // ✅ FIX: Look for jobs where mechanic is null OR doesn't exist
+      // ✅ FIX: Show unassigned jobs OR jobs specifically assigned to this mechanic that are still 'Requested'
       filter = {
         status: 'Requested',
-        $or: [{ mechanic: null }, { mechanic: { $exists: false } }],
+        $or: [
+          { mechanic: null }, 
+          { mechanic: { $exists: false } },
+          { mechanic: req.user._id } 
+        ],
       }
     } else if (tab === 'progress') {
       filter = {
