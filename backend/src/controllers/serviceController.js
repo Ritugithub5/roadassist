@@ -8,11 +8,18 @@ import { successResponse, errorResponse } from '../utils/apiResponse.js'
 // @route   POST /api/services
 export const createRequest = async (req, res, next) => {
   try {
-    const data = { ...req.body, user: req.user._id }
+    // ✅ FIX: Explicitly set mechanic to null if no preferredMechanic is passed
+    const data = {
+      ...req.body,
+      user: req.user._id,
+      mechanic:
+        req.body.preferredMechanic && req.body.preferredMechanic !== 'auto'
+          ? req.body.preferredMechanic
+          : null,
+    }
 
     // Auto-assign if driver picked a specific mechanic
-    if (req.body.preferredMechanic && req.body.preferredMechanic !== 'auto') {
-      data.mechanic = req.body.preferredMechanic
+    if (data.mechanic) {
       data.status = 'Accepted'
     }
 
@@ -218,7 +225,11 @@ export const getMechanicJobs = async (req, res, next) => {
     let filter = {}
 
     if (tab === 'new') {
-      filter = { status: 'Requested', mechanic: { $exists: false } }
+      // ✅ FIX: Look for jobs where mechanic is null OR doesn't exist
+      filter = {
+        status: 'Requested',
+        $or: [{ mechanic: null }, { mechanic: { $exists: false } }],
+      }
     } else if (tab === 'progress') {
       filter = {
         mechanic: req.user._id,
@@ -229,6 +240,7 @@ export const getMechanicJobs = async (req, res, next) => {
     } else {
       filter = {
         $or: [
+          { status: 'Requested', mechanic: null },
           { status: 'Requested', mechanic: { $exists: false } },
           { mechanic: req.user._id },
         ],
