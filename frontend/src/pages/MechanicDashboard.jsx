@@ -18,28 +18,19 @@ const MechanicDashboard = () => {
 
   const [online, setOnline] = useState(false)
   const [mechanicProfile, setMechanicProfile] = useState(null)
-  const [newJobs, setNewJobs] = useState([])
-  const [progressJobs, setProgressJobs] = useState([])
-  const [completedJobs, setCompletedJobs] = useState([])
+  const [allJobs, setAllJobs] = useState([])
   const [earnings, setEarnings] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('new')
   const [toast, setToast] = useState({ message: '', type: 'error' })
   const [refreshing, setRefreshing] = useState(false)
 
+  // ✅ Fetch ALL jobs at once, don't rely on backend tab filters
   const fetchData = async () => {
     try {
-      const [
-        profileRes,
-        newJobsRes,
-        progressJobsRes,
-        completedJobsRes,
-        earningsRes,
-      ] = await Promise.all([
+      const [profileRes, jobsRes, earningsRes] = await Promise.all([
         API.get('/mechanics/me').catch(() => ({ data: { data: null } })),
-        API.get('/services/mechanic/jobs?tab=new').catch(() => ({ data: { data: [] } })),
-        API.get('/services/mechanic/jobs?tab=progress').catch(() => ({ data: { data: [] } })),
-        API.get('/services/mechanic/jobs?tab=completed').catch(() => ({ data: { data: [] } })),
+        API.get('/services/mechanic/jobs').catch(() => ({ data: { data: [] } })), // No ?tab=
         API.get('/mechanics/me/earnings').catch(() => ({ data: { data: null } })),
       ])
 
@@ -47,9 +38,8 @@ const MechanicDashboard = () => {
         setMechanicProfile(profileRes.data.data)
         setOnline(profileRes.data.data.isOnline)
       }
-      setNewJobs(newJobsRes.data.data || [])
-      setProgressJobs(progressJobsRes.data.data || [])
-      setCompletedJobs(completedJobsRes.data.data || [])
+      
+      setAllJobs(jobsRes.data.data || [])
       setEarnings(earningsRes.data.data || null)
     } catch (error) {
       setToast({
@@ -111,6 +101,13 @@ const MechanicDashboard = () => {
     setRefreshing(true)
     fetchData()
   }
+
+  // ✅ Filter on the frontend
+  const newJobs = allJobs.filter((j) => j.status === 'Requested')
+  const progressJobs = allJobs.filter((j) =>
+    ['Accepted', 'En Route', 'Arrived'].includes(j.status)
+  )
+  const completedJobs = allJobs.filter((j) => j.status === 'Completed')
 
   const firstName = user?.name?.split(' ')[0] || 'Mechanic'
   const garageName = mechanicProfile?.garageName || ''
