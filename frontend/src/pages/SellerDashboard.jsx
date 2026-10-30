@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaShoppingBag, FaRupeeSign, FaBox, FaStar, FaArrowRight,
-  FaSignOutAlt, FaBell, FaCog, FaShieldAlt, FaChartLine,
-  FaBoxOpen, FaPlus, FaStore,
+  FaSignOutAlt, FaCog, FaShieldAlt, FaBoxOpen, 
 } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
 import API from '../utils/api'
+import NotificationBell from '../components/NotificationBell'
 
 const SellerDashboard = () => {
   const navigate = useNavigate()
@@ -84,7 +84,7 @@ const SellerDashboard = () => {
             </div>
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 border border-purple-200 mb-2">
-                <FaStore className="text-purple-700 text-[10px]" />
+                <FaBoxOpen className="text-purple-700 text-[10px]" />
                 <span className="text-[10px] font-bold tracking-widest uppercase text-purple-800">
                   Seller Account
                 </span>
@@ -97,6 +97,8 @@ const SellerDashboard = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationBell />
+
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-red-200 hover:border-red-400 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"

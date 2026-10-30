@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaCar, FaClipboardList, FaPlus, FaMapMarkerAlt, FaClock,
-  FaRupeeSign, FaSignOutAlt, FaBell, FaCog, FaArrowRight,
+  FaRupeeSign, FaSignOutAlt, FaCog, FaArrowRight,
   FaTools, FaShieldAlt, FaStar, FaHistory, FaSpinner,
-  FaMotorcycle, FaCheckCircle, FaTimesCircle,
+  FaMotorcycle,
 } from 'react-icons/fa'
 import Button from '../components/Button'
 import Toast from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
 import API from '../utils/api'
+import NotificationBell from '../components/NotificationBell'
 
 const UserDashboard = () => {
   const navigate = useNavigate()
@@ -187,16 +188,7 @@ const UserDashboard = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/history')}
-              className="relative w-11 h-11 rounded-xl bg-white border border-amber-200 hover:border-amber-400 flex items-center justify-center text-warm-700 hover:text-amber-700 transition-colors"
-              title="Notifications"
-            >
-              <FaBell />
-              {requests.filter((r) => ['Accepted', 'En Route', 'Arrived'].includes(r.status)).length > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </button>
+            <NotificationBell />
 
             <button
               onClick={() => navigate('/vehicles')}

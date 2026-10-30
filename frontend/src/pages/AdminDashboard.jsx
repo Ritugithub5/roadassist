@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaUsers, FaTools, FaClipboardList, FaRupeeSign, FaCheck, FaTimes,
-  FaEye, FaGavel, FaChartBar, FaSignOutAlt, FaBell, FaCog,
+  FaEye, FaGavel, FaChartBar, FaSignOutAlt, FaCog,
   FaShieldAlt, FaArrowRight, FaSpinner,
 } from 'react-icons/fa'
 import Toast from '../components/Toast'
+import NotificationBell from '../components/NotificationBell'
 import { useAuth } from '../context/AuthContext'
 import API from '../utils/api'
 
@@ -210,16 +211,8 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/admin/reports')}
-              className="relative w-11 h-11 rounded-xl bg-white border border-amber-200 hover:border-amber-400 flex items-center justify-center text-warm-700 hover:text-amber-700 transition-colors"
-              title="Notifications"
-            >
-              <FaBell />
-              {stats?.openDisputes > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </button>
+            {/* ✅ Real Notification Bell */}
+            <NotificationBell />
 
             <button
               onClick={() => navigate('/admin/users')}
