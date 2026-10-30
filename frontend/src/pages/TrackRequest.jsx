@@ -359,9 +359,14 @@ const TrackRequest = () => {
                   <Button variant="outline" size="sm">
                     <FaPhone /> Call
                   </Button>
-                  <Button size="sm">
-                    <FaComment /> Chat
-                  </Button>
+                  <a
+  href={`https://wa.me/91${mechanic?.phone || ''}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-white text-sm font-semibold transition-all"
+>
+  <FaComment /> WhatsApp
+</a>
                 </div>
               </div>
             ) : (

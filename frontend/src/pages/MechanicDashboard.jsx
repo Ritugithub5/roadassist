@@ -653,9 +653,14 @@ const JobCard = ({ job, onAccept, onStatusUpdate }) => {
 
       {['Accepted', 'En Route', 'Arrived'].includes(status) && (
         <div className="flex gap-2 pt-3 border-t border-cream-200">
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-cream-50 hover:bg-amber-50 text-warm-700 hover:text-amber-700 text-xs font-semibold transition-colors">
-            <FaComment /> Chat
-          </button>
+          <a
+  href={`https://wa.me/91${job.user?.phone || ''}`} // Opens WhatsApp with customer's number
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] text-xs font-semibold transition-colors"
+>
+  <FaComment /> WhatsApp
+</a>
           {status === 'Accepted' && (
             <button
               onClick={() => onStatusUpdate('En Route')}
