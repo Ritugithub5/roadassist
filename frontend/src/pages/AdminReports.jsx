@@ -4,6 +4,7 @@ import {
   FaArrowLeft, FaChartLine, FaChartBar, FaArrowUp, FaArrowDown,
   FaDownload, FaTrophy, FaMedal, FaMapMarkerAlt, FaStar,
   FaPrint, FaCalendarAlt, FaSpinner,
+  FaTools, // ✅ ADDED THIS BACK
 } from 'react-icons/fa'
 import Toast from '../components/Toast'
 import API from '../utils/api'
