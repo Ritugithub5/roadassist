@@ -208,37 +208,9 @@ export const acceptRequest = async (req, res, next) => {
 // @route   GET /api/services/mechanic/jobs
 export const getMechanicJobs = async (req, res, next) => {
   try {
-    const { tab } = req.query
-    let filter = {}
-
-    if (tab === 'new') {
-      // ✅ THE FIX: Looks for jobs assigned to THIS mechanic that are still 'Requested'
-      filter = {
-        status: 'Requested',
-        $or: [
-          { mechanic: null },
-          { mechanic: { $exists: false } },
-          { mechanic: req.user._id },
-        ],
-      }
-    } else if (tab === 'progress') {
-      filter = {
-        mechanic: req.user._id,
-        status: { $in: ['Accepted', 'En Route', 'Arrived'] },
-      }
-    } else if (tab === 'completed') {
-      filter = { mechanic: req.user._id, status: 'Completed' }
-    } else {
-      filter = {
-        $or: [
-          { status: 'Requested', mechanic: null },
-          { status: 'Requested', mechanic: req.user._id },
-          { mechanic: req.user._id },
-        ],
-      }
-    }
-
-    const jobs = await ServiceRequest.find(filter)
+    // Just fetch all jobs and let the frontend filter them. 
+    // This guarantees no query errors.
+    const jobs = await ServiceRequest.find()
       .populate('user', 'name phone')
       .populate('vehicle', 'name plate type')
       .populate('mechanic', 'name phone')

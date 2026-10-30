@@ -27,12 +27,12 @@ const MechanicDashboard = () => {
   const [toast, setToast] = useState({ message: '', type: 'error' })
   const [refreshing, setRefreshing] = useState(false)
 
-  // ✅ Fetch ALL jobs at once to prevent backend filtering bugs
   const fetchData = async () => {
     try {
+      // 1. Fetch profile, ALL jobs, and earnings at the same time
       const [profileRes, jobsRes, earningsRes] = await Promise.all([
         API.get('/mechanics/me').catch(() => ({ data: { data: null } })),
-        API.get('/services/mechanic/jobs').catch(() => ({ data: { data: [] } })), // No ?tab=
+        API.get('/services/mechanic/jobs').catch(() => ({ data: { data: [] } })), 
         API.get('/mechanics/me/earnings').catch(() => ({ data: { data: null } })),
       ])
 
@@ -41,12 +41,20 @@ const MechanicDashboard = () => {
         setOnline(profileRes.data.data.isOnline)
       }
 
+      // 2. Get all jobs and filter them on the frontend
       const allJobs = jobsRes.data.data || []
       
-      // ✅ Filter on the frontend
-      setNewJobs(allJobs.filter((j) => j.status === 'Requested'))
-      setProgressJobs(allJobs.filter((j) => ['Accepted', 'En Route', 'Arrived'].includes(j.status)))
-      setCompletedJobs(allJobs.filter((j) => j.status === 'Completed'))
+      // Filter to ensure we only show jobs for this mechanic (or unassigned)
+      const myJobs = allJobs.filter(job => {
+        const jobMechId = job.mechanic?._id || job.mechanic;
+        const myId = user?._id;
+        // Show if unassigned OR assigned to me
+        return !jobMechId || jobMechId === myId;
+      });
+
+      setNewJobs(myJobs.filter((j) => j.status === 'Requested'))
+      setProgressJobs(myJobs.filter((j) => ['Accepted', 'En Route', 'Arrived'].includes(j.status)))
+      setCompletedJobs(myJobs.filter((j) => j.status === 'Completed'))
       
       setEarnings(earningsRes.data.data || null)
     } catch (error) {
@@ -64,7 +72,7 @@ const MechanicDashboard = () => {
     fetchData()
     const interval = setInterval(fetchData, 10000)
     return () => clearInterval(interval)
-  }, [])
+  }, [user]) // Add user to dependency array to ensure it's loaded
 
   const handleToggleOnline = async () => {
     try {
