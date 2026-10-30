@@ -8,6 +8,7 @@ import { successResponse, errorResponse } from '../utils/apiResponse.js'
 // @route   POST /api/services
 export const createRequest = async (req, res, next) => {
   try {
+    // ✅ Force status to 'Requested'. Do NOT auto-accept.
     const data = {
       ...req.body,
       user: req.user._id,
@@ -210,12 +211,15 @@ export const getMechanicJobs = async (req, res, next) => {
     const { tab } = req.query
     let filter = {}
 
-    // ✅ THE ULTIMATE FIX: 
-    // If tab is 'new', find ANY job that is 'Requested' and assigned to THIS mechanic.
     if (tab === 'new') {
+      // ✅ THE FIX: Looks for jobs assigned to THIS mechanic that are still 'Requested'
       filter = {
         status: 'Requested',
-        mechanic: req.user._id, 
+        $or: [
+          { mechanic: null },
+          { mechanic: { $exists: false } },
+          { mechanic: req.user._id },
+        ],
       }
     } else if (tab === 'progress') {
       filter = {
@@ -225,7 +229,13 @@ export const getMechanicJobs = async (req, res, next) => {
     } else if (tab === 'completed') {
       filter = { mechanic: req.user._id, status: 'Completed' }
     } else {
-      filter = { mechanic: req.user._id }
+      filter = {
+        $or: [
+          { status: 'Requested', mechanic: null },
+          { status: 'Requested', mechanic: req.user._id },
+          { mechanic: req.user._id },
+        ],
+      }
     }
 
     const jobs = await ServiceRequest.find(filter)

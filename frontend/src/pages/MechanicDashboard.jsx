@@ -18,14 +18,16 @@ const MechanicDashboard = () => {
 
   const [online, setOnline] = useState(false)
   const [mechanicProfile, setMechanicProfile] = useState(null)
-  const [allJobs, setAllJobs] = useState([])
+  const [newJobs, setNewJobs] = useState([])
+  const [progressJobs, setProgressJobs] = useState([])
+  const [completedJobs, setCompletedJobs] = useState([])
   const [earnings, setEarnings] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('new')
   const [toast, setToast] = useState({ message: '', type: 'error' })
   const [refreshing, setRefreshing] = useState(false)
 
-  // ✅ Fetch ALL jobs at once, don't rely on backend tab filters
+  // ✅ Fetch ALL jobs at once to prevent backend filtering bugs
   const fetchData = async () => {
     try {
       const [profileRes, jobsRes, earningsRes] = await Promise.all([
@@ -38,8 +40,14 @@ const MechanicDashboard = () => {
         setMechanicProfile(profileRes.data.data)
         setOnline(profileRes.data.data.isOnline)
       }
+
+      const allJobs = jobsRes.data.data || []
       
-      setAllJobs(jobsRes.data.data || [])
+      // ✅ Filter on the frontend
+      setNewJobs(allJobs.filter((j) => j.status === 'Requested'))
+      setProgressJobs(allJobs.filter((j) => ['Accepted', 'En Route', 'Arrived'].includes(j.status)))
+      setCompletedJobs(allJobs.filter((j) => j.status === 'Completed'))
+      
       setEarnings(earningsRes.data.data || null)
     } catch (error) {
       setToast({
@@ -101,13 +109,6 @@ const MechanicDashboard = () => {
     setRefreshing(true)
     fetchData()
   }
-
-  // ✅ Filter on the frontend
-  const newJobs = allJobs.filter((j) => j.status === 'Requested')
-  const progressJobs = allJobs.filter((j) =>
-    ['Accepted', 'En Route', 'Arrived'].includes(j.status)
-  )
-  const completedJobs = allJobs.filter((j) => j.status === 'Completed')
 
   const firstName = user?.name?.split(' ')[0] || 'Mechanic'
   const garageName = mechanicProfile?.garageName || ''
