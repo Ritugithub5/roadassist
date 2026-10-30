@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   FaArrowLeft, FaChartLine, FaChartBar, FaArrowUp, FaArrowDown,
   FaDownload, FaTrophy, FaMedal, FaMapMarkerAlt, FaStar,
-  FaRupeeSign, FaTools, FaUserPlus, FaExclamationTriangle,
-  FaPrint, FaCalendarAlt, FaCheckCircle, FaSpinner,
+  FaPrint, FaCalendarAlt, FaSpinner,
 } from 'react-icons/fa'
 import Toast from '../components/Toast'
 import API from '../utils/api'
@@ -34,6 +33,44 @@ const AdminReports = () => {
     }
     fetchReports()
   }, [])
+
+  // ============ PRINT FUNCTION ============
+  const handlePrint = () => {
+    window.print()
+  }
+
+  // ============ EXPORT CSV FUNCTION ============
+  const handleExport = () => {
+    if (!reports) return
+
+    // Prepare CSV content
+    const headers = ['Metric', 'Value']
+    const rows = [
+      ['Total Revenue', reports.revenue.total],
+      ['Total Jobs', reports.services.total],
+      ['Completed Jobs', reports.services.completed],
+      ['Cancelled Jobs', reports.services.cancelled],
+      ['Total Users', reports.users.total],
+      ['Total Drivers', reports.users.drivers],
+      ['Total Mechanics', reports.users.mechanics],
+      ['Open Disputes', reports.disputes.open],
+    ]
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.join(',')),
+    ].join('\n')
+
+    // Download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'roadassist_reports.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   const rangeOptions = [
     { id: '7d', label: '7 Days' },
@@ -164,7 +201,7 @@ const AdminReports = () => {
       <div className="max-w-7xl mx-auto">
         <button
           onClick={() => navigate('/admin')}
-          className="inline-flex items-center gap-2 text-warm-700 hover:text-amber-700 mb-6 text-sm font-semibold transition-colors"
+          className="inline-flex items-center gap-2 text-warm-700 hover:text-amber-700 mb-6 text-sm font-semibold transition-colors print:hidden"
         >
           <FaArrowLeft /> Back to Admin
         </button>
@@ -172,7 +209,7 @@ const AdminReports = () => {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-200 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-200 mb-3 print:hidden">
               <FaChartLine className="text-amber-700 text-xs" />
               <span className="text-[10px] font-bold tracking-widest uppercase text-amber-800">
                 Admin · Reports
@@ -186,7 +223,7 @@ const AdminReports = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
             <div className="flex items-center gap-1 bg-white rounded-xl p-1 border border-amber-100">
               {rangeOptions.map((r) => (
                 <button
@@ -203,10 +240,19 @@ const AdminReports = () => {
               ))}
             </div>
 
-            <button className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-amber-200 text-warm-800 text-sm font-semibold hover:border-amber-400 hover:bg-amber-50 transition-all">
+            {/* ✅ Connected Print Button */}
+            <button 
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-amber-200 text-warm-800 text-sm font-semibold hover:border-amber-400 hover:bg-amber-50 transition-all"
+            >
               <FaPrint /> Print
             </button>
-            <button className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white text-sm font-bold shadow-md shadow-amber-500/30 hover:shadow-lg transition-all">
+            
+            {/* ✅ Connected Export Button */}
+            <button 
+              onClick={handleExport}
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white text-sm font-bold shadow-md shadow-amber-500/30 hover:shadow-lg transition-all"
+            >
               <FaDownload /> Export
             </button>
           </div>
@@ -557,7 +603,7 @@ const AdminReports = () => {
         )}
 
         {/* INFO BANNER */}
-        <div className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-cream-100 border border-amber-200 flex items-start gap-4">
+        <div className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-cream-100 border border-amber-200 flex items-start gap-4 print:hidden">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white flex-shrink-0">
             <FaCalendarAlt />
           </div>
