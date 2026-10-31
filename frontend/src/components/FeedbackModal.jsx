@@ -11,7 +11,7 @@ const FeedbackModal = ({ open, onClose, onSubmit, item }) => {
 
   const handleSubmit = () => {
     if (rating === 0) return
-    onSubmit({ id: item.id, rating, review })
+    onSubmit({ id: item._id, rating, review })
     setSubmitted(true)
   }
 
