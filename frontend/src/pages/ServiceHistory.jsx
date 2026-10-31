@@ -281,7 +281,11 @@ const ServiceHistory = () => {
       setToast({ message: 'Rating submitted!', type: 'success' })
       fetchHistory()
     } catch (error) {
-      setToast({ message: 'Failed to submit rating', type: 'error' })
+      console.error('Feedback error:', error.response?.data || error.message)
+      setToast({ 
+        message: error.response?.data?.message || 'Failed to submit rating', 
+        type: 'error' 
+      })
     }
   }
 
