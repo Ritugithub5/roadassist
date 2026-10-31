@@ -11,6 +11,8 @@ const FeedbackModal = ({ open, onClose, onSubmit, item }) => {
 
   const handleSubmit = () => {
     if (rating === 0) return
+    
+    // ✅ THE FIX: Send item._id instead of item.id
     onSubmit({ id: item._id, rating, review })
     setSubmitted(true)
   }
@@ -32,7 +34,12 @@ const FeedbackModal = ({ open, onClose, onSubmit, item }) => {
             Your rating helps us improve our service quality.
           </p>
           <button
-            onClick={onClose}
+            onClick={() => {
+              setSubmitted(false)
+              setRating(0)
+              setReview('')
+              onClose()
+            }}
             className="w-full py-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold hover:shadow-lg transition-all"
           >
             Close

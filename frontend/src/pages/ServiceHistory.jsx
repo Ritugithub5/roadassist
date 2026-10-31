@@ -55,7 +55,10 @@ const ServiceHistory = () => {
           serviceId: r.serviceType,
           mechanic: r.mechanic?.name || 'Not assigned',
           mechanicId: r.mechanic?._id || r.mechanic || null,
-          mechanicRating: 4.9,
+          
+          // ✅ FIXED: Use the actual rating given for THIS job, not a hardcoded 4.9
+          mechanicRating: r.rating || 0, 
+          
           date: r.createdAt,
           dateLabel: date.toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -154,7 +157,6 @@ const ServiceHistory = () => {
     setDrawerOpen(true)
   }
 
-  // ✅ NEW — open dispute modal
   const handleRaiseDispute = (item) => {
     if (!item.mechanicId) {
       setToast({
