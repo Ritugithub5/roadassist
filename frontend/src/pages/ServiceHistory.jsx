@@ -1,114 +1,127 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  FaArrowLeft, FaSearch, FaFileInvoice, FaDownload,
-  FaFilter, FaFileAlt, FaStar, FaTools, FaCalendarAlt,
-  FaSpinner, FaCheckCircle, FaTimesCircle, FaExclamationTriangle,
-} from 'react-icons/fa'
-import HistoryDetailDrawer from '../components/HistoryDetailDrawer'
-import FeedbackModal from '../components/FeedbackModal'
-import RaiseDisputeModal from '../components/RaiseDisputeModal'
-import Toast from '../components/Toast'
-import API from '../utils/api'
+  FaArrowLeft,
+  FaSearch,
+  FaFileInvoice,
+  FaDownload,
+  FaFilter,
+  FaFileAlt,
+  FaStar,
+  FaTools,
+  FaCalendarAlt,
+  FaSpinner,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import HistoryDetailDrawer from "../components/HistoryDetailDrawer";
+import FeedbackModal from "../components/FeedbackModal";
+import RaiseDisputeModal from "../components/RaiseDisputeModal";
+import Toast from "../components/Toast";
+import API from "../utils/api";
 
 const serviceLabels = {
-  breakdown: 'Breakdown Repair',
-  towing: 'Towing Service',
-  battery: 'Battery Jump-Start',
-  tire: 'Flat Tire Repair',
-  fuel: 'Fuel Delivery',
-  inspection: 'Vehicle Inspection',
-}
+  breakdown: "Breakdown Repair",
+  towing: "Towing Service",
+  battery: "Battery Jump-Start",
+  tire: "Flat Tire Repair",
+  fuel: "Fuel Delivery",
+  inspection: "Vehicle Inspection",
+};
 
 const ServiceHistory = () => {
-  const navigate = useNavigate()
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [toast, setToast] = useState({ message: '', type: 'error' })
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [toast, setToast] = useState({ message: "", type: "error" });
 
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
-  const [serviceFilter, setServiceFilter] = useState('all')
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [serviceFilter, setServiceFilter] = useState("all");
 
-  const [selectedItem, setSelectedItem] = useState(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [feedbackItem, setFeedbackItem] = useState(null)
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackItem, setFeedbackItem] = useState(null);
 
   // ✅ NEW — Raise dispute
-  const [disputeModal, setDisputeModal] = useState({ open: false, service: null })
-  const [disputedServiceIds, setDisputedServiceIds] = useState(new Set())
+  const [disputeModal, setDisputeModal] = useState({
+    open: false,
+    service: null,
+  });
+  const [disputedServiceIds, setDisputedServiceIds] = useState(new Set());
 
   // ============ FETCH ============
   const fetchHistory = async () => {
     try {
-      setLoading(true)
-      const { data } = await API.get('/services/my')
+      setLoading(true);
+      const { data } = await API.get("/services/my");
 
       const transformed = (data.data || []).map((r) => {
-        const date = new Date(r.createdAt)
+        const date = new Date(r.createdAt);
         return {
-          id: r.requestId || 'SR-' + r._id.slice(-4),
+          id: r.requestId || "SR-" + r._id.slice(-4),
           _id: r._id,
           service: serviceLabels[r.serviceType] || r.serviceType,
           serviceId: r.serviceType,
-          mechanic: r.mechanic?.name || 'Not assigned',
+          mechanic: r.mechanic?.name || "Not assigned",
           mechanicId: r.mechanic?._id || r.mechanic || null,
-          
+
           // ✅ FIXED: Use the actual rating given for THIS job, not a hardcoded 4.9
-          mechanicRating: r.rating || 0, 
-          
+          mechanicRating: r.rating || 0,
+
           date: r.createdAt,
-          dateLabel: date.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
+          dateLabel: date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
           }),
-          time: date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
+          time: date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
           }),
-          location: r.location?.address || '—',
-          vehicle: r.vehicle ? `${r.vehicle.name} (${r.vehicle.plate})` : '—',
+          location: r.location?.address || "—",
+          vehicle: r.vehicle ? `${r.vehicle.name} (${r.vehicle.plate})` : "—",
           status: r.status,
           amount: r.amount || 0,
           tax: r.tax || 0,
           total: r.total || 0,
-          paymentMode: r.paymentMode || 'Pending',
-          invoiceId: r.requestId ? `INV-${r.requestId}` : '—',
+          paymentMode: r.paymentMode || "Pending",
+          invoiceId: r.requestId ? `INV-${r.requestId}` : "—",
           rating: r.rating || 0,
-          review: r.review || '',
-        }
-      })
+          review: r.review || "",
+        };
+      });
 
-      setItems(transformed)
+      setItems(transformed);
 
       // ✅ Load which services already have disputes
       try {
-        const dispRes = await API.get('/disputes/my')
+        const dispRes = await API.get("/disputes/my");
         const ids = new Set(
           (dispRes.data.data || [])
             .map((d) => d.relatedService)
             .filter(Boolean)
-            .map((s) => s.toString())
-        )
-        setDisputedServiceIds(ids)
+            .map((s) => s.toString()),
+        );
+        setDisputedServiceIds(ids);
       } catch (e) {
         // ignore
       }
 
-      setError('')
+      setError("");
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load history')
+      setError(err.response?.data?.message || "Failed to load history");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchHistory()
-  }, [])
+    fetchHistory();
+  }, []);
 
   // ============ FILTERS ============
   const filtered = useMemo(() => {
@@ -117,56 +130,83 @@ const ServiceHistory = () => {
         !search ||
         it.id.toLowerCase().includes(search.toLowerCase()) ||
         it.service.toLowerCase().includes(search.toLowerCase()) ||
-        it.mechanic.toLowerCase().includes(search.toLowerCase())
-      const matchStatus = statusFilter === 'All' || it.status === statusFilter
-      const matchService = serviceFilter === 'all' || it.serviceId === serviceFilter
-      return matchSearch && matchStatus && matchService
-    })
-  }, [items, search, statusFilter, serviceFilter])
+        it.mechanic.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === "All" || it.status === statusFilter;
+      const matchService =
+        serviceFilter === "all" || it.serviceId === serviceFilter;
+      return matchSearch && matchStatus && matchService;
+    });
+  }, [items, search, statusFilter, serviceFilter]);
 
   // ============ STATS ============
   const stats = useMemo(() => {
-    const totalServices = items.length
-    const completedItems = items.filter((i) => i.status === 'Completed')
-    const totalSpent = completedItems.reduce((sum, i) => sum + i.total, 0)
-    const totalSaved = Math.round(totalSpent * 0.2)
-    const ratedItems = items.filter((i) => i.rating > 0)
+    const totalServices = items.length;
+    const completedItems = items.filter((i) => i.status === "Completed");
+    const totalSpent = completedItems.reduce((sum, i) => sum + i.total, 0);
+    const totalSaved = Math.round(totalSpent * 0.2);
+    const ratedItems = items.filter((i) => i.rating > 0);
     const avgRating =
       ratedItems.length > 0
-        ? (ratedItems.reduce((sum, i) => sum + i.rating, 0) / ratedItems.length).toFixed(1)
-        : '0.0'
+        ? (
+            ratedItems.reduce((sum, i) => sum + i.rating, 0) / ratedItems.length
+          ).toFixed(1)
+        : "0.0";
 
     return [
-      { id: 'total', label: 'Total Services', value: totalServices, icon: '🔧', color: 'brand' },
-      { id: 'spent', label: 'Total Spent', value: `₹${totalSpent.toLocaleString()}`, icon: '💰', color: 'amber' },
-      { id: 'saved', label: 'Total Saved', value: `₹${totalSaved.toLocaleString()}`, icon: '📉', color: 'emerald' },
-      { id: 'rating', label: 'Avg Rating Given', value: avgRating, icon: '⭐', color: 'blue' },
-    ]
-  }, [items])
+      {
+        id: "total",
+        label: "Total Services",
+        value: totalServices,
+        icon: "🔧",
+        color: "brand",
+      },
+      {
+        id: "spent",
+        label: "Total Spent",
+        value: `₹${totalSpent.toLocaleString()}`,
+        icon: "💰",
+        color: "amber",
+      },
+      {
+        id: "saved",
+        label: "Total Saved",
+        value: `₹${totalSaved.toLocaleString()}`,
+        icon: "📉",
+        color: "emerald",
+      },
+      {
+        id: "rating",
+        label: "Avg Rating Given",
+        value: avgRating,
+        icon: "⭐",
+        color: "blue",
+      },
+    ];
+  }, [items]);
 
   const colorMap = {
-    brand: 'from-amber-500 to-orange-500',
-    amber: 'from-amber-400 to-amber-600',
-    emerald: 'from-emerald-500 to-emerald-600',
-    blue: 'from-blue-500 to-blue-600',
-  }
+    brand: "from-amber-500 to-orange-500",
+    amber: "from-amber-400 to-amber-600",
+    emerald: "from-emerald-500 to-emerald-600",
+    blue: "from-blue-500 to-blue-600",
+  };
 
   // ============ ACTIONS ============
   const handleView = (item) => {
-    setSelectedItem(item)
-    setDrawerOpen(true)
-  }
+    setSelectedItem(item);
+    setDrawerOpen(true);
+  };
 
   const handleRaiseDispute = (item) => {
     if (!item.mechanicId) {
       setToast({
-        message: 'Cannot raise dispute — no mechanic assigned to this service',
-        type: 'error',
-      })
-      return
+        message: "Cannot raise dispute — no mechanic assigned to this service",
+        type: "error",
+      });
+      return;
     }
-    setDisputeModal({ open: true, service: item })
-  }
+    setDisputeModal({ open: true, service: item });
+  };
 
   const handleDownload = (item) => {
     const invoiceHTML = `
@@ -256,61 +296,71 @@ const ServiceHistory = () => {
           <script>window.onload = () => setTimeout(() => window.print(), 600);</script>
         </body>
       </html>
-    `
+    `;
 
-    const printWindow = window.open('', '_blank', 'width=900,height=800')
+    const printWindow = window.open("", "_blank", "width=900,height=800");
     if (!printWindow) {
-      alert('Please allow popups to download the invoice')
-      return
+      alert("Please allow popups to download the invoice");
+      return;
     }
-    printWindow.document.write(invoiceHTML)
-    printWindow.document.close()
-  }
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
+  };
 
   const handleReorder = (item) => {
-    navigate(`/request-service?service=${item.serviceId}`)
-  }
+    navigate(`/request-service?service=${item.serviceId}`);
+  };
 
   const handleRate = (item) => {
-    setFeedbackItem(item)
-    setDrawerOpen(false)
-    setFeedbackOpen(true)
-  }
+    setFeedbackItem(item);
+    setDrawerOpen(false);
+    setFeedbackOpen(true);
+  };
 
   const handleFeedbackSubmit = async ({ id, rating, review }) => {
     try {
-      await API.post(`/services/${id}/feedback`, { rating, review })
-      setToast({ message: 'Rating submitted!', type: 'success' })
-      fetchHistory()
+      await API.post(`/services/${id}/feedback`, { rating, review });
+      setToast({ message: "Rating submitted!", type: "success" });
+      fetchHistory();
     } catch (error) {
-      console.error('Feedback error:', error.response?.data || error.message)
-      setToast({ 
-        message: error.response?.data?.message || 'Failed to submit rating', 
-        type: 'error' 
-      })
+      console.error("Feedback error:", error.response?.data || error.message);
+      setToast({
+        message: error.response?.data?.message || "Failed to submit rating",
+        type: "error",
+      });
     }
-  }
+  };
 
-  const statusFilters = ['All', 'Requested', 'Accepted', 'En Route', 'Arrived', 'Completed', 'Cancelled']
+  const statusFilters = [
+    "All",
+    "Requested",
+    "Accepted",
+    "En Route",
+    "Arrived",
+    "Completed",
+    "Cancelled",
+  ];
   const serviceFilters = [
-    { id: 'all', label: 'All Services' },
-    { id: 'battery', label: 'Battery' },
-    { id: 'tire', label: 'Tire' },
-    { id: 'towing', label: 'Towing' },
-    { id: 'fuel', label: 'Fuel' },
-    { id: 'breakdown', label: 'Breakdown' },
-    { id: 'inspection', label: 'Inspection' },
-  ]
+    { id: "all", label: "All Services" },
+    { id: "battery", label: "Battery" },
+    { id: "tire", label: "Tire" },
+    { id: "towing", label: "Towing" },
+    { id: "fuel", label: "Fuel" },
+    { id: "breakdown", label: "Breakdown" },
+    { id: "inspection", label: "Inspection" },
+  ];
 
   if (loading) {
     return (
       <div className="min-h-screen bg-cream-50 pt-32 pb-20 px-6 flex items-center justify-center">
         <div className="text-center">
           <FaSpinner className="animate-spin text-4xl text-amber-500 mx-auto mb-4" />
-          <p className="text-warm-700 font-semibold">Loading your service history...</p>
+          <p className="text-warm-700 font-semibold">
+            Loading your service history...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -318,12 +368,12 @@ const ServiceHistory = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: 'error' })}
+        onClose={() => setToast({ message: "", type: "error" })}
       />
 
       <div className="max-w-7xl mx-auto">
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
           className="inline-flex items-center gap-2 text-warm-700 hover:text-amber-700 mb-6 text-sm font-semibold transition-colors"
         >
           <FaArrowLeft /> Back to Dashboard
@@ -342,19 +392,20 @@ const ServiceHistory = () => {
               Your Service Records
             </h1>
             <p className="text-sm text-warm-700">
-              {items.length} total request{items.length !== 1 ? 's' : ''} • All your past roadside services
+              {items.length} total request{items.length !== 1 ? "s" : ""} • All
+              your past roadside services
             </p>
           </div>
 
           <div className="flex gap-2">
             <button
-              onClick={() => navigate('/my-disputes')}
+              onClick={() => navigate("/my-disputes")}
               className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-amber-200 text-warm-800 text-sm font-semibold hover:border-amber-400 hover:bg-amber-50 transition-all"
             >
               My Disputes
             </button>
             <button
-              onClick={() => navigate('/request-service')}
+              onClick={() => navigate("/request-service")}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
               <FaTools /> New Request
@@ -378,7 +429,9 @@ const ServiceHistory = () => {
                 >
                   {s.icon}
                 </div>
-                <p className="text-2xl font-bold text-warm-900 mb-0.5">{s.value}</p>
+                <p className="text-2xl font-bold text-warm-900 mb-0.5">
+                  {s.value}
+                </p>
                 <p className="text-xs text-warm-700 font-medium">{s.label}</p>
               </div>
             </div>
@@ -422,8 +475,8 @@ const ServiceHistory = () => {
                 onClick={() => setServiceFilter(sf.id)}
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                   serviceFilter === sf.id
-                    ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white border-amber-500 shadow-md shadow-amber-500/20'
-                    : 'bg-white text-warm-700 border-cream-200 hover:border-amber-300 hover:text-amber-700'
+                    ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white border-amber-500 shadow-md shadow-amber-500/20"
+                    : "bg-white text-warm-700 border-cream-200 hover:border-amber-300 hover:text-amber-700"
                 }`}
               >
                 {sf.label}
@@ -456,10 +509,11 @@ const ServiceHistory = () => {
               No service history yet
             </h2>
             <p className="text-warm-700 mb-8 max-w-md mx-auto">
-              Your past roadside services will appear here after you complete your first request.
+              Your past roadside services will appear here after you complete
+              your first request.
             </p>
             <button
-              onClick={() => navigate('/request-service')}
+              onClick={() => navigate("/request-service")}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
             >
               Request Your First Service
@@ -476,9 +530,9 @@ const ServiceHistory = () => {
             </p>
             <button
               onClick={() => {
-                setSearch('')
-                setStatusFilter('All')
-                setServiceFilter('all')
+                setSearch("");
+                setStatusFilter("All");
+                setServiceFilter("all");
               }}
               className="text-amber-700 font-semibold text-sm hover:text-amber-800"
             >
@@ -492,22 +546,41 @@ const ServiceHistory = () => {
               <table className="w-full">
                 <thead className="bg-cream-50 border-b border-cream-200">
                   <tr>
-                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">ID</th>
-                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">Service</th>
-                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">Mechanic</th>
-                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">Date</th>
-                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">Status</th>
-                    <th className="text-right px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">Amount</th>
-                    <th className="text-right px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">Actions</th>
+                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      Service
+                    </th>
+                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      Mechanic
+                    </th>
+                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="text-left px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="text-right px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="text-right px-4 py-4 text-[10px] font-bold text-warm-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((item) => {
-                    const hasDispute = disputedServiceIds.has(item._id)
+                    const hasDispute = disputedServiceIds.has(item._id);
                     return (
-                      <tr key={item._id} className="border-b border-cream-100 hover:bg-cream-50/60 transition-colors">
+                      <tr
+                        key={item._id}
+                        className="border-b border-cream-100 hover:bg-cream-50/60 transition-colors"
+                      >
                         <td className="px-4 py-4">
-                          <span className="font-mono text-xs font-bold text-warm-800">{item.id}</span>
+                          <span className="font-mono text-xs font-bold text-warm-800">
+                            {item.id}
+                          </span>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
@@ -515,32 +588,50 @@ const ServiceHistory = () => {
                               <FaTools />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-warm-900 text-sm">{item.service}</p>
-                              <p className="text-[11px] text-warm-700 truncate">{item.vehicle}</p>
+                              <p className="font-semibold text-warm-900 text-sm">
+                                {item.service}
+                              </p>
+                              <p className="text-[11px] text-warm-700 truncate">
+                                {item.vehicle}
+                              </p>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <p className="text-sm font-semibold text-warm-900">{item.mechanic}</p>
+                          <p className="text-sm font-semibold text-warm-900">
+                            {item.mechanic}
+                          </p>
                           {item.mechanicRating > 0 && (
-                            <p className="text-[11px] text-warm-700">⭐ {item.mechanicRating}</p>
+                            <p className="text-[11px] text-warm-700">
+                              ⭐ {item.mechanicRating}
+                            </p>
+                          )}
+                          {/* ✅ THIS SHOWS THE REVIEW */}
+                          {item.review && (
+                            <p className="text-[11px] text-amber-700 italic mt-1 max-w-[200px] truncate">
+                              "{item.review}"
+                            </p>
                           )}
                         </td>
                         <td className="px-4 py-4">
-                          <p className="text-sm font-semibold text-warm-900">{item.dateLabel}</p>
-                          <p className="text-[11px] text-warm-700">{item.time}</p>
+                          <p className="text-sm font-semibold text-warm-900">
+                            {item.dateLabel}
+                          </p>
+                          <p className="text-[11px] text-warm-700">
+                            {item.time}
+                          </p>
                         </td>
                         <td className="px-4 py-4">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                              item.status === 'Completed'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                : item.status === 'Cancelled'
-                                ? 'bg-red-50 text-red-600 border-red-100'
-                                : 'bg-amber-50 text-amber-700 border-amber-100'
+                              item.status === "Completed"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                : item.status === "Cancelled"
+                                  ? "bg-red-50 text-red-600 border-red-100"
+                                  : "bg-amber-50 text-amber-700 border-amber-100"
                             }`}
                           >
-                            {item.status === 'Completed' ? (
+                            {item.status === "Completed" ? (
                               <FaCheckCircle className="text-[9px]" />
                             ) : (
                               <FaTimesCircle className="text-[9px]" />
@@ -553,7 +644,9 @@ const ServiceHistory = () => {
                             ₹{item.total.toLocaleString()}
                           </p>
                           {item.tax > 0 && (
-                            <p className="text-[10px] text-warm-700">incl. GST</p>
+                            <p className="text-[10px] text-warm-700">
+                              incl. GST
+                            </p>
                           )}
                         </td>
                         <td className="px-4 py-4">
@@ -565,7 +658,7 @@ const ServiceHistory = () => {
                             >
                               <FaFileAlt className="text-xs" />
                             </button>
-                            {item.status === 'Completed' && (
+                            {item.status === "Completed" && (
                               <>
                                 <button
                                   onClick={() => handleDownload(item)}
@@ -580,11 +673,13 @@ const ServiceHistory = () => {
                                   disabled={hasDispute}
                                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                                     hasDispute
-                                      ? 'bg-red-50 text-red-400 cursor-not-allowed'
-                                      : 'bg-cream-100 hover:bg-red-50 text-warm-700 hover:text-red-600'
+                                      ? "bg-red-50 text-red-400 cursor-not-allowed"
+                                      : "bg-cream-100 hover:bg-red-50 text-warm-700 hover:text-red-600"
                                   }`}
                                   title={
-                                    hasDispute ? 'Dispute already raised' : 'Raise dispute'
+                                    hasDispute
+                                      ? "Dispute already raised"
+                                      : "Raise dispute"
                                   }
                                 >
                                   <FaExclamationTriangle className="text-xs" />
@@ -594,7 +689,7 @@ const ServiceHistory = () => {
                           </div>
                         </td>
                       </tr>
-                    )
+                    );
                   })}
                 </tbody>
               </table>
@@ -603,28 +698,35 @@ const ServiceHistory = () => {
             {/* Mobile Cards */}
             <div className="lg:hidden space-y-3">
               {filtered.map((item) => {
-                const hasDispute = disputedServiceIds.has(item._id)
+                const hasDispute = disputedServiceIds.has(item._id);
                 return (
                   <div
                     key={item._id}
                     className="bg-white rounded-2xl border border-amber-100 p-4 hover:border-amber-300 hover:shadow-lg transition-all"
                   >
-                    <div onClick={() => handleView(item)} className="cursor-pointer">
+                    <div
+                      onClick={() => handleView(item)}
+                      className="cursor-pointer"
+                    >
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-sm">
                             <FaTools />
                           </div>
                           <div>
-                            <p className="font-bold text-warm-900 text-sm">{item.service}</p>
-                            <p className="font-mono text-[10px] text-warm-700">{item.id}</p>
+                            <p className="font-bold text-warm-900 text-sm">
+                              {item.service}
+                            </p>
+                            <p className="font-mono text-[10px] text-warm-700">
+                              {item.id}
+                            </p>
                           </div>
                         </div>
                         <span
                           className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                            item.status === 'Completed'
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-red-50 text-red-600'
+                            item.status === "Completed"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-red-50 text-red-600"
                           }`}
                         >
                           {item.status}
@@ -633,15 +735,23 @@ const ServiceHistory = () => {
 
                       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                         <div className="flex items-center gap-1.5 text-warm-700">
-                          <FaCalendarAlt className="text-amber-600 text-[10px]" /> {item.dateLabel}
+                          <FaCalendarAlt className="text-amber-600 text-[10px]" />{" "}
+                          {item.dateLabel}
                         </div>
-                        <div className="flex items-center gap-1.5 text-warm-700">
-                          <FaStar className="text-yellow-500 text-[10px]" /> {item.mechanic}
+                        <div className="flex flex-col text-warm-700">
+                          <div className="flex items-center gap-1.5">
+                            <FaStar className="text-yellow-500 text-[10px]" /> {item.mechanic}
+                          </div>
+                          {item.review && (
+                            <span className="text-[10px] italic text-amber-700 mt-0.5">"{item.review}"</span>
+                          )}
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-cream-200">
-                        <span className="text-[11px] text-warm-700 truncate">{item.vehicle}</span>
+                        <span className="text-[11px] text-warm-700 truncate">
+                          {item.vehicle}
+                        </span>
                         <span className="font-bold text-warm-900 ml-2">
                           ₹{item.total.toLocaleString()}
                         </span>
@@ -655,7 +765,7 @@ const ServiceHistory = () => {
                       >
                         View
                       </button>
-                      {item.status === 'Completed' && (
+                      {item.status === "Completed" && (
                         <>
                           <button
                             onClick={() => handleDownload(item)}
@@ -668,10 +778,14 @@ const ServiceHistory = () => {
                             disabled={hasDispute}
                             className={`w-10 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
                               hasDispute
-                                ? 'bg-red-50 text-red-400'
-                                : 'bg-red-50 text-red-600 hover:bg-red-100'
+                                ? "bg-red-50 text-red-400"
+                                : "bg-red-50 text-red-600 hover:bg-red-100"
                             }`}
-                            title={hasDispute ? 'Dispute already raised' : 'Raise dispute'}
+                            title={
+                              hasDispute
+                                ? "Dispute already raised"
+                                : "Raise dispute"
+                            }
                           >
                             <FaExclamationTriangle className="text-[10px]" />
                           </button>
@@ -679,7 +793,7 @@ const ServiceHistory = () => {
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </>
@@ -709,14 +823,14 @@ const ServiceHistory = () => {
         service={disputeModal.service}
         onSuccess={() => {
           setToast({
-            message: 'Dispute raised. Our team will review it.',
-            type: 'success',
-          })
-          fetchHistory()
+            message: "Dispute raised. Our team will review it.",
+            type: "success",
+          });
+          fetchHistory();
         }}
       />
     </div>
-  )
-}
+  );
+};
 
-export default ServiceHistory
+export default ServiceHistory;
